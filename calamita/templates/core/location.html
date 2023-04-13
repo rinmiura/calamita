@@ -1,0 +1,115 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load scroll_tags %}
+
+{% block geo_api_script %}
+{% endblock %}
+
+{% block content %}
+        <div class="location__container" data-scroll-section>
+
+            <div class="location__container-title" data-scroll>
+                <h1 class="anime-js-title">{{ l.title }}</h1>
+            </div>
+            <div class="location__container-subtitle" data-scroll>
+                <p>{{ l.category }}</p>
+            </div>
+
+            <div class="location__container-images">
+                {% for url in l.urls.all %}
+                <div class="location__image location__image-{{ forloop.counter }}"
+                     data-scroll data-scroll-speed="{{ list_for_dss|get:forloop.counter0 }}"
+                     style="background: url('/media/{{ url.location_url }}') no-repeat 50% 50%; background-size: cover;">
+                </div>
+                {% endfor %}
+            </div>
+
+            <div id="map" class="location__map">
+            </div>
+
+            <div class="location-next-link" data-scroll>
+                <a href="">Next</a>
+            </div>
+
+        </div>
+{% endblock %}
+
+
+{% block scripts %}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/2.0.2/anime.min.js"></script>
+    <script>
+        // smooth scroll
+        const scroll = new LocomotiveScroll({
+            el: document.querySelector('#js-scroll'),
+            smooth: true,
+            smoothMobile: true,
+            inertia: 0.75
+        });
+
+        // project title animation
+        var textWrapper = document.querySelector('.anime-js-title');
+        textWrapper.innerHTML = textWrapper.textContent.replace(/\S/g, "<span class='letter'>$&</span>");
+
+        anime.timeline()
+            .add({
+                targets: '.anime-js-title .letter',
+                translateY: [60, 0],
+                translateZ: 0,
+                opacity: [0, 1],
+                easing: "easeOutExpo",
+                duration: 1200,
+                delay: (el, i) => 600 + 30 * i
+            });
+
+        // project subtitle animation
+        TweenMax.from(".project__container-subtitle", 2, {
+            y: 10,
+            opacity: 0,
+            ease: Expo.easeInOut
+        });
+
+        // project image fade
+        TweenMax.from(".project__image-one", 2, {
+            opacity: 0,
+            ease: Expo.easeInOut
+        });
+    </script>
+    <script>
+        ymaps.ready(function () {
+            var myMap = new ymaps.Map('map', {
+                    center: [{{ l.longitude }}, {{ l.latitude }}],
+                    zoom: 14
+                }, {
+                    searchControlProvider: 'yandex#search'
+                }),
+
+                myPlacemark = new ymaps.Placemark(myMap.getCenter(), {
+                    iconCaption: '{{ l.title }}'
+                }, {
+                    preset: 'islands#violetDotIconWithCaption',
+                    draggable: true
+                });
+
+            var isMobile = {
+                Android: function() {return navigator.userAgent.match(/Android/i);},
+                BlackBerry: function() {return navigator.userAgent.match(/BlackBerry/i);},
+                iOS: function() {return navigator.userAgent.match(/iPhone|iPad|iPod/i);},
+                Opera: function() {return navigator.userAgent.match(/Opera Mini/i);},
+                Windows: function() {return navigator.userAgent.match(/IEMobile/i);},
+                any: function() {
+                    return (isMobile.Android() || isMobile.BlackBerry() || isMobile.iOS() || isMobile.Opera() || isMobile.Windows());
+                }
+            };
+
+            // после вызова карты
+            if(isMobile.any()){
+                    myMap.behaviors.disable('drag');
+            }
+            myMap.behaviors.disable('scrollZoom');
+
+            myMap.geoObjects
+                .add(myPlacemark)
+                .add(myPlacemarkWithContent);
+        });
+    </script>
+{% endblock %}

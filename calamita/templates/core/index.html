@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<!-- horizontal scroll items -->
+        <div class="container">
+            <div class="container__item container__item-header">
+                {% if user.is_authenticated %}
+                <h1>Незримое и малое, <br> Поиск новых мест</h1>
+                {% else %}
+                <h1>Подключить кошелек <br> прямо сейчас <br> и исследовать локации</h1>
+                {% endif %}
+            </div>
+
+            {% if user.is_authenticated %}
+                {% for l in locations %}
+
+                {% load static %}
+                <div class="container__item"
+                     style="background: url('/media/{{ l.urls.last.location_url }} ') no-repeat 50% 50%; background-size: cover;">
+                    <h1 class="container__item-title">
+                        <a href="{% url 'location' %}?title={{l.title}}">{{ l.user.username }}</a>
+                    </h1>
+                </div>
+
+                {% endfor %}
+            {% endif %}
+        </div>
+{% endblock %}
+
+{% block scripts %}
+    <script src="{% static 'horizontal-scroll.js' %}"></script>
+    <script>
+        var blocks = document.getElementsByClassName("container__item");
+        var container = document.getElementsByClassName("container");
+        var hs = new HorizontalScroll.default({
+            blocks: blocks,
+            container: container,
+            isAnimated: true,
+            springEffect: 0.8,
+        });
+    </script>
+{% endblock %}
